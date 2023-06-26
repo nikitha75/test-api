@@ -50,7 +50,6 @@ exports.generateRefreshToken = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Refresh token generated!",
-            email,
             user
         });
     } catch (error) {
