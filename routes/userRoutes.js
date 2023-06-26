@@ -1,13 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { createUser, fetchUserEmail, fetchUsers, generateRefreshToken, verifyAuthentication } = require("../controller/userController");
+const { createUser, fetchUserEmail, updateAccessToken } = require("../controller/userController");
 
 
 
 router.post("/create/user", createUser);
-router.get("/user/:userId", verifyAuthentication, fetchUserEmail);
-router.get("/users", fetchUsers);
-router.put("/user", generateRefreshToken);
+router.put("/user", updateAccessToken);
+router.get("/user/:userId", fetchUserEmail);
 
 
 module.exports = router;

@@ -4,24 +4,17 @@ var jwt = require("jsonwebtoken");
 
 
 exports.createUser = async (req, res) => {
-    const { email } = req.body;
+    const { email, notionId, accessToken, refreshToken } = req.body;
     try {
-
         const user = new User({
-            email
+            email,
+            notionId,
+            accessToken,
+            refreshToken
         });
 
-        const accessToken = jwt.sign({ _id: user._id, email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "20m" });
-        user.accessToken = accessToken;
-
-        // const refreshToken = jwt.sign({ _id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1d" });
-        // res.cookie("token", refreshToken, { expires: new Date(Date.now() + 24 * 60 * 60 * 1000), httpOnly: true });
-
-        //To store the same token as refresh token in the cookie
-        res.cookie("token", accessToken, {  expires: new Date(Date.now() + 24 * 60 * 60 * 1000), httpOnly: true });
-
         await user.save();
-
+        
         res.status(200).json({
             success: true,
             message: "User created!",
@@ -36,47 +29,27 @@ exports.createUser = async (req, res) => {
 }
 
 
-exports.verifyAuthentication = (req, res, next) => {
+exports.updateAccessToken = async (req, res) => {
+    const { email, accessToken } = req.body;
     try {
-        const token = req.cookies.token;
-        const decodedTkn = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
-        req.user = decodedTkn; 
-        next(); 
-    } catch (error) {
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized"
-        });
-    }
-}
-
-
-
-
-//without using cookie
-exports.generateRefreshToken = async (req, res) => {
-    // const { userId } = req.params;
-    const { email } = req.body;
-    try {
-        // const user = await User.findById(userId);
         const user = await User.findOne({ email });
+        user.accessToken = accessToken;
 
-        const refreshToken = jwt.sign({ _id: user._id, email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1d" });
-        user.refreshToken = refreshToken;
+        //Approach 2
+        // const user = await User.findOneAndUpdate(email, { $set: { accessToken } }, { new: true });
 
         res.status(200).json({
             success: true,
-            message: "Refresh token generated!",
+            message: "Access token updated!",
             user
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            error: "Failed to generate refresh token."
+            error: "Failed to update access token."
         });
     }
 }
-
 
 
 exports.fetchUserEmail = async (req, res) => {
@@ -95,25 +68,6 @@ exports.fetchUserEmail = async (req, res) => {
         res.status(500).json({
             success: false,
             error: "Failed to fetch user's email."
-        });
-    }
-}
-
-
-
-exports.fetchUsers = async (req, res) => {
-    try {
-        const users = await User.find();
-
-        res.status(200).json({
-            success: true,
-            message: "Fetched all users!",
-            users
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: "Failed to fetch users"
         });
     }
 }
