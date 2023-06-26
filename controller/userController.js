@@ -36,6 +36,33 @@ exports.createUser = async (req, res) => {
 }
 
 
+//without using cookie
+exports.generateRefreshToken = async (req, res) => {
+    // const { userId } = req.params;
+    const { email } = req.body;
+    try {
+        // const user = await User.findById(userId);
+        const user = await User.findOne({ email });
+        
+        const refreshToken = jwt.sign({_id: user._id, email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1d" });
+        user.refreshToken = refreshToken;
+ 
+        res.status(200).json({
+            success: true,
+            message: "Refresh token generated!",
+            email,
+            user
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: "Failed to generate refresh token."
+        });
+    }
+}
+
+
+
 exports.fetchUserEmail = async (req, res) => {
     const { userId } = req.params;
     try {
