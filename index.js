@@ -4,6 +4,7 @@ const app = express();
 
 const connectDB = require("./config/database");
 const bodyParser = require("body-parser");
+const cookieparser = require('cookie-parser');
 const userRoutes = require("./routes/userRoutes");
 
 
