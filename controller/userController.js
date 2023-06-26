@@ -14,11 +14,11 @@ exports.createUser = async (req, res) => {
         const accessToken = jwt.sign({ _id: user._id, email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "20m" });
         user.accessToken = accessToken;
 
-        const refreshToken = jwt.sign({_id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1d" });
-        res.cookie("token", refreshToken, {  expires: new Date(Date.now() + 24 * 60 * 60 * 1000), httpOnly: true });
+        // const refreshToken = jwt.sign({ _id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1d" });
+        // res.cookie("token", refreshToken, { expires: new Date(Date.now() + 24 * 60 * 60 * 1000), httpOnly: true });
 
         //To store the same token as refresh token in the cookie
-        // res.cookie("token", accessToken, {  expires: new Date(Date.now() + 24 * 60 * 60 * 1000), httpOnly: true });
+        res.cookie("token", accessToken, {  expires: new Date(Date.now() + 24 * 60 * 60 * 1000), httpOnly: true });
 
         await user.save();
 
@@ -36,6 +36,23 @@ exports.createUser = async (req, res) => {
 }
 
 
+exports.verifyAuthentication = (req, res, next) => {
+    try {
+        const token = req.cookies.token;
+        const decodedTkn = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+        req.user = decodedTkn; 
+        next(); 
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            error: "Unauthorized"
+        });
+    }
+}
+
+
+
+
 //without using cookie
 exports.generateRefreshToken = async (req, res) => {
     // const { userId } = req.params;
@@ -43,10 +60,10 @@ exports.generateRefreshToken = async (req, res) => {
     try {
         // const user = await User.findById(userId);
         const user = await User.findOne({ email });
-        
-        const refreshToken = jwt.sign({_id: user._id, email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1d" });
+
+        const refreshToken = jwt.sign({ _id: user._id, email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1d" });
         user.refreshToken = refreshToken;
- 
+
         res.status(200).json({
             success: true,
             message: "Refresh token generated!",
